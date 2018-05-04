@@ -20,11 +20,8 @@ class PartyTests(unittest.TestCase):
         # party details
         result = self.client.get("/")
 
-        with self.client as c:
-            with c.session_transaction() as sess:
-                if 'RSVP' not in sess:
-                    # self.assertNotIn("Party Details", result.data)
-                    self.assertIn("Please RSVP", result.data)
+        self.assertNotIn("Party Details", result.data)
+        self.assertIn("Please RSVP", result.data)
 
     def test_rsvp(self):
         result = self.client.post("/rsvp",
@@ -44,6 +41,11 @@ class PartyTestsDatabase(unittest.TestCase):
 
         self.client = app.test_client()
         app.config['TESTING'] = True
+        
+        # Put RSVP in session
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess["RSVP"] = True
 
         # Connect to test database (uncomment when testing database)
         connect_to_db(app, "postgresql:///testdb")
@@ -64,8 +66,7 @@ class PartyTestsDatabase(unittest.TestCase):
 
         result = self.client.get("/games")
         self.assertIn("Twister", result.data)
-
-        # print "FIXME"
+        self.assertNotIn("Ticket to Ride", result.data)
 
 
 if __name__ == "__main__":
